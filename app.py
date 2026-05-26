@@ -156,7 +156,12 @@ with st.sidebar:
     st.markdown("---")
     
     st.markdown("### 🔑 API Authentication")
-    api_provider = st.selectbox("LLM Provider", ["OpenRouter API", "Gemini API"])
+    api_provider = st.selectbox(
+        "LLM Provider", 
+        ["OpenRouter API", "Gemini API", "Ollama (Local)"],
+        index=["OpenRouter API", "Gemini API", "Ollama (Local)"].index(config.ACTIVE_PROVIDER) if config.ACTIVE_PROVIDER in ["OpenRouter API", "Gemini API", "Ollama (Local)"] else 0
+    )
+    config.ACTIVE_PROVIDER = api_provider
     
     if api_provider == "OpenRouter API":
         api_key = st.text_input("OpenRouter Key", type="password", value=config.OPENROUTER_API_KEY)
@@ -170,6 +175,12 @@ with st.sidebar:
             config.GEMINI_API_KEY = api_key
         if not config.GEMINI_API_KEY:
             st.warning("⚠️ Enter Gemini API Key or set it in .env")
+    elif api_provider == "Ollama (Local)":
+        ollama_base = st.text_input("Ollama Endpoint", value=config.OLLAMA_API_BASE)
+        ollama_model = st.text_input("Ollama Model", value=config.OLLAMA_MODEL)
+        config.OLLAMA_API_BASE = ollama_base
+        config.OLLAMA_MODEL = ollama_model
+        st.info("💡 Make sure Ollama is running locally and the model is pulled (`ollama pull <model>`).")
 
     st.markdown("---")
     st.markdown("### ⚙️ Security Sensitivity")

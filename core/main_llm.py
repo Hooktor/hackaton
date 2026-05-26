@@ -71,26 +71,92 @@ def call_live_gemini(system_prompt: str, user_prompt: str) -> str:
         print(f"Gemini Exception: {e}")
         return ""
 
+def call_local_ollama(system_prompt: str, user_prompt: str, model: str) -> str:
+    """
+    Performs a local call to Ollama REST API.
+    """
+    url = f"{config.OLLAMA_API_BASE}/api/chat"
+    headers = {"Content-Type": "application/json"}
+    
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        "stream": False,
+        "options": {
+            "temperature": 0.1
+        }
+    }
+    
+    try:
+        with httpx.Client(timeout=30.0) as client:
+            response = client.post(url, headers=headers, json=payload)
+            if response.status_code == 200:
+                data = response.json()
+                return data["message"]["content"]
+            else:
+                print(f"Ollama Error: Status {response.status_code} - {response.text}")
+                return ""
+    except Exception as e:
+        print(f"Ollama Exception: {e}")
+        return ""
+
 def call_llm(system_prompt: str, user_prompt: str, model_name: str = None, is_judge: bool = False) -> str:
     """
-    Orchestrates live API calling based on API key availability.
-    Raises ValueError if no keys are found.
+    Orchestrates live or local API calling based on active provider selection and key availability.
     """
-    model = model_name or config.MAIN_MODEL
+    provider = config.ACTIVE_PROVIDER
     
-    # 1. Use OpenRouter if key is present
-    if config.OPENROUTER_API_KEY:
-        res = call_live_openrouter(system_prompt, user_prompt, model)
+    if provider == "OpenRouter API":
+        model = model_name or config.MAIN_MODEL
+        if config.OPENROUTER_API_KEY:
+            res = call_live_openrouter(system_prompt, user_prompt, model)
+            if res:
+                return res
+        # Fallback to Gemini
+        if config.GEMINI_API_KEY:
+            res = call_live_gemini(system_prompt, user_prompt)
+            if res:
+                return res
+        # Fallback to Ollama
+        res = call_local_ollama(system_prompt, user_prompt, config.OLLAMA_MODEL)
         if res:
             return res
-            
-    # 2. Use Gemini if key is present
-    if config.GEMINI_API_KEY:
-        res = call_live_gemini(system_prompt, user_prompt)
+
+    elif provider == "Gemini API":
+        if config.GEMINI_API_KEY:
+            res = call_live_gemini(system_prompt, user_prompt)
+            if res:
+                return res
+        # Fallback to OpenRouter
+        if config.OPENROUTER_API_KEY:
+            res = call_live_openrouter(system_prompt, user_prompt, model_name or config.MAIN_MODEL)
+            if res:
+                return res
+        # Fallback to Ollama
+        res = call_local_ollama(system_prompt, user_prompt, config.OLLAMA_MODEL)
         if res:
             return res
-            
-    raise ValueError("Configuration Error: No active LLM API keys configured. Please configure OPENROUTER_API_KEY or GEMINI_API_KEY.")
+
+    elif provider == "Ollama (Local)":
+        model = model_name if model_name and not model_name.startswith("openai/") and not model_name.startswith("meta-") else config.OLLAMA_MODEL
+        res = call_local_ollama(system_prompt, user_prompt, model)
+        if res:
+            return res
+        # Fallback to OpenRouter
+        if config.OPENROUTER_API_KEY:
+            res = call_live_openrouter(system_prompt, user_prompt, model_name or config.MAIN_MODEL)
+            if res:
+                return res
+        # Fallback to Gemini
+        if config.GEMINI_API_KEY:
+            res = call_live_gemini(system_prompt, user_prompt)
+            if res:
+                return res
+
+    raise ValueError("Configuration Error: No active LLM provider could successfully return a response. Please verify OpenRouter/Gemini API keys, or ensure local Ollama is running.")
 
 def call_llm_json(system_prompt: str, user_prompt: str, model_name: str = None) -> dict:
     """

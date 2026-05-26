@@ -8,6 +8,11 @@ load_dotenv()
 # --- API CONFIGURATION ---
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+OLLAMA_API_BASE = os.getenv("OLLAMA_API_BASE", "http://localhost:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3")
+
+# Active Provider: "OpenRouter API", "Gemini API", or "Ollama (Local)"
+ACTIVE_PROVIDER = os.getenv("ACTIVE_PROVIDER", "OpenRouter API" if OPENROUTER_API_KEY else ("Gemini API" if GEMINI_API_KEY else "Ollama (Local)"))
 
 # Default models
 MAIN_MODEL = "openai/gpt-4o-mini"
