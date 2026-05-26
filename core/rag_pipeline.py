@@ -118,23 +118,28 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             attacker_name TEXT NOT NULL,
             payload TEXT NOT NULL,
+            result TEXT NOT NULL DEFAULT '',
             vulnerability_type TEXT NOT NULL,
             status TEXT NOT NULL, -- Blocked, Sanitized, Bypassed
             timestamp TEXT NOT NULL
         )
     """)
+    try:
+        cursor.execute("ALTER TABLE vulnerability_reports ADD COLUMN result TEXT DEFAULT ''")
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
     conn.close()
 
-def save_vulnerability_report(attacker_name: str, payload: str, vulnerability_type: str, status: str) -> int:
+def save_vulnerability_report(attacker_name: str, payload: str, vulnerability_type: str, status: str, result: str = "") -> int:
     """Saves a vulnerability report submitted by the Red Team."""
     init_db()
     timestamp = time.strftime("%Y-%m-%dT%H:%M:%S")
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO vulnerability_reports (attacker_name, payload, vulnerability_type, status, timestamp) VALUES (?, ?, ?, ?, ?)",
-        (attacker_name, payload, vulnerability_type, status, timestamp)
+        "INSERT INTO vulnerability_reports (attacker_name, payload, result, vulnerability_type, status, timestamp) VALUES (?, ?, ?, ?, ?, ?)",
+        (attacker_name, payload, result, vulnerability_type, status, timestamp)
     )
     report_id = cursor.lastrowid
     conn.commit()
@@ -146,7 +151,7 @@ def get_vulnerability_reports() -> list:
     init_db()
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    cursor.execute("SELECT id, attacker_name, payload, vulnerability_type, status, timestamp FROM vulnerability_reports ORDER BY timestamp DESC")
+    cursor.execute("SELECT id, attacker_name, payload, result, vulnerability_type, status, timestamp FROM vulnerability_reports ORDER BY timestamp DESC")
     rows = cursor.fetchall()
     conn.close()
     
@@ -156,9 +161,10 @@ def get_vulnerability_reports() -> list:
             "id": r[0],
             "attacker_name": r[1],
             "payload": r[2],
-            "vulnerability_type": r[3],
-            "status": r[4],
-            "timestamp": r[5]
+            "result": r[3],
+            "vulnerability_type": r[4],
+            "status": r[5],
+            "timestamp": r[6]
         })
     return reports
 
