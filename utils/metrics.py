@@ -1,6 +1,18 @@
 import time
 import threading
-from prometheus_client import start_http_server, Counter, Histogram, Gauge
+from prometheus_client import start_http_server, Counter, Histogram, Gauge, REGISTRY
+
+# --- UNREGISTER DUPLICATES FOR STREAMLIT RELOADS ---
+# Streamlit hot-reloads the module, which triggers dual-registration errors in Prometheus.
+# We proactively unregister our collectors if they are already in the global registry.
+for collector in list(REGISTRY._collector_to_names.keys()):
+    for name in REGISTRY._collector_to_names[collector]:
+        if name in ["citadel_requests_total", "citadel_attacks_total", "citadel_latency_seconds", "citadel_llm_calls_total", "citadel_estimated_cost_usd", "citadel_current_threat_risk"]:
+            try:
+                REGISTRY.unregister(collector)
+            except KeyError:
+                pass
+            break
 
 # --- GLOBALS & LAUNCH PREVENTION ---
 METRICS_PORT = 8000
