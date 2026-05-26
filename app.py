@@ -103,6 +103,13 @@ st.markdown("""
     .badge-filtered { background: rgba(255, 0, 127, 0.15); color: #ff007f; border: 1px solid rgba(255, 0, 127, 0.3); }
     .badge-redacted { background: rgba(255, 170, 0, 0.15); color: #ffaa00; border: 1px solid rgba(255, 170, 0, 0.3); }
     .badge-skipped { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.3); }
+    
+    /* Hide top header, deploy menu, footer, and GitHub source links */
+    header { visibility: hidden !important; }
+    footer { visibility: hidden !important; }
+    #MainMenu { visibility: hidden !important; }
+    .stAppDeployButton { display: none !important; }
+    button[data-testid="streamlit_share_button"] { display: none !important; }
 </style>
 """, unsafe_allow_html=True)
 

@@ -54,6 +54,13 @@ st.markdown("""
         border-left: 3px solid #00ff66 !important;
         background: rgba(0, 255, 102, 0.03) !important;
     }
+    
+    /* Hide top header, deploy menu, footer, and GitHub source links */
+    header { visibility: hidden !important; }
+    footer { visibility: hidden !important; }
+    #MainMenu { visibility: hidden !important; }
+    .stAppDeployButton { display: none !important; }
+    button[data-testid="streamlit_share_button"] { display: none !important; }
 </style>
 """, unsafe_allow_html=True)
 
