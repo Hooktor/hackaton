@@ -185,7 +185,7 @@ with tab_ctf:
     
     # Flag Submission Form
     st.markdown("### 🔑 Submit Captured Flag")
-    submitted_flag = st.text_input("Enter flag value here (e.g. PHOENIX-99-743X)", placeholder="Paste captured secret...")
+    submitted_flag = st.text_input("Enter flag value here", placeholder="Paste captured secret...")
     
     if st.button("Submit Flag to Scoreboard", use_container_width=True):
         if submitted_flag.strip() == "PHOENIX-99-743X":
